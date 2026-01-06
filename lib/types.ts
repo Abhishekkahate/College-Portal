@@ -3,7 +3,7 @@ export interface User {
     name: string;
     email: string;
     avatar?: string;
-    role: "student" | "admin" | "CR" | "teacher";
+    role: "student" | "admin" | "CR" | "teacher" | "Teacher" | "Student"; // Added capitalized roles for consistency
     department?: string;
     semester?: string;
     createdAt: Date;
@@ -56,9 +56,12 @@ export interface NotificationItem {
     id: string;
     title: string;
     message: string;
-    type: "info" | "success" | "warning" | "error";
+    type: "info" | "success" | "warning" | "error" | "urgent";
     read: boolean;
     createdAt: Date;
+    date: string; // Display date string e.g. "2 hours ago"
+    bg?: string; // Tailwind class
+    color?: string; // Tailwind class
 }
 
 export interface SearchFilters {
@@ -75,4 +78,54 @@ export interface DashboardStats {
     totalDownloads: number;
     totalSubjects: number;
     recentActivity: number;
+}
+
+export interface ScheduleClass {
+    time: string;
+    subject: string;
+    room: string;
+    type: "Lecture" | "Lab" | "Practical" | "Activity";
+}
+
+export interface ScheduleDay {
+    day: string;
+    classes: ScheduleClass[];
+}
+
+export interface Exam {
+    id?: string;
+    subject: string;
+    code: string;
+    date: string;
+    time: string;
+    venue: string;
+    syllabus: string;
+    status: "Upcoming" | "Completed" | "Cancelled";
+}
+
+export interface PracticalScheduleItem {
+    day: string;
+    time: string;
+    subject: string;
+    lab: string;
+    group: string;
+}
+
+export interface PracticalNote {
+    id: number | string;
+    subject: string;
+    title: string;
+    date: string;
+    size: string;
+}
+
+export interface LostFoundItem {
+    id: number | string;
+    type: "Lost" | "Found";
+    item: string;
+    location: string;
+    date: string;
+    contact: string;
+    description: string;
+    status: "Open" | "Resolved";
 }

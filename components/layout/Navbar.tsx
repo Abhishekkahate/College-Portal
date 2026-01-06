@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, Menu } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 
-export default function Navbar() {
+interface NavbarProps {
+    onMenuClick?: () => void;
+}
+
+export default function Navbar({ onMenuClick }: NavbarProps) {
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
@@ -18,8 +22,14 @@ export default function Navbar() {
     return (
         <header className="h-20 bg-white border border-gray-200 rounded-2xl px-6 flex items-center justify-between z-40 sticky top-4 shadow-sm">
             {/* Search */}
-            <div className="flex-1 max-w-md">
-                <div className="relative group">
+            <div className="flex-1 max-w-md flex items-center gap-3">
+                <button
+                    onClick={onMenuClick}
+                    className="md:hidden p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+                >
+                    <Menu className="w-6 h-6" />
+                </button>
+                <div className="relative group w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                     <input
                         type="text"

@@ -6,78 +6,33 @@ import { FileText, Calendar, Download, Upload, Clock, MapPin, Edit } from "lucid
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { User } from "@/lib/types";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot } from "firebase/firestore";
+import { PracticalScheduleItem, PracticalNote } from "@/lib/types";
 
-const practicalSchedule = [
-    {
-        day: "Tuesday",
-        time: "02:00 PM - 04:00 PM",
-        subject: "Workshop Practice",
-        lab: "Workshop",
-        group: "All Groups"
-    },
-    {
-        day: "Wednesday",
-        time: "02:00 PM - 04:00 PM",
-        subject: "PPS Lab",
-        lab: "Computer Center",
-        group: "Group A"
-    },
-    {
-        day: "Thursday",
-        time: "11:00 AM - 01:00 PM",
-        subject: "Engineering Graphics",
-        lab: "Drawing Hall",
-        group: "All Groups"
-    },
-    {
-        day: "Friday",
-        time: "11:00 AM - 01:00 PM",
-        subject: "Chemistry Lab",
-        lab: "Chem Lab 1",
-        group: "Group B"
-    }
-];
-
-const practicalNotes = [
-    {
-        id: 1,
-        subject: "PPS Lab",
-        title: "Experiment 1: Basic C Programs",
-        date: "2 days ago",
-        size: "1.2 MB"
-    },
-    {
-        id: 2,
-        subject: "Chemistry Lab",
-        title: "Titration Experiment Manual",
-        date: "1 week ago",
-        size: "2.5 MB"
-    },
-    {
-        id: 3,
-        subject: "Workshop",
-        title: "Workshop Safety Guidelines",
-        date: "2 weeks ago",
-        size: "800 KB"
-    },
-    {
-        id: 4,
-        subject: "Engineering Graphics",
-        title: "Projections of Solids",
-        date: "3 weeks ago",
-        size: "5.4 MB"
-    }
-];
+// Hardcoded data removed.
 
 export default function PracticalPage() {
     const [activeTab, setActiveTab] = useState<'schedule' | 'notes'>('schedule');
-    const [user, setUser] = useState<User | null>(null);
+    const { user, role } = useAuth();
+    const [practicalSchedule, setPracticalSchedule] = useState<PracticalScheduleItem[]>([]);
+    const [practicalNotes, setPracticalNotes] = useState<PracticalNote[]>([]);
 
-    useEffect(() => { // Added import above or ensure React imports include useEffect
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
+    useEffect(() => {
+        const unsubSchedule = onSnapshot(collection(db, "practicalSchedule"), (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as PracticalScheduleItem));
+            setPracticalSchedule(data);
+        });
+        const unsubNotes = onSnapshot(collection(db, "practicalNotes"), (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as PracticalNote));
+            setPracticalNotes(data);
+        });
+
+        return () => {
+            unsubSchedule();
+            unsubNotes();
+        };
     }, []);
 
     return (
@@ -115,7 +70,7 @@ export default function PracticalPage() {
 
             {activeTab === 'schedule' ? (
                 <div className="grid grid-cols-1 gap-6">
-                    {user?.role === "CR" && (
+                    {(role === "CR" || role === "Teacher") && (
                         <div className="flex justify-end mb-4">
                             <Button variant="outline" icon={<Edit className="w-4 h-4" />}>Update Schedule</Button>
                         </div>
@@ -159,7 +114,7 @@ export default function PracticalPage() {
                 </div>
             ) : (
                 <div className="space-y-6">
-                    {user?.role === "CR" && (
+                    {(role === "CR" || role === "Teacher") && (
                         <div className="flex justify-end">
                             <Button variant="primary" icon={<Upload className="w-4 h-4" />}>Upload Practical Note</Button>
                         </div>

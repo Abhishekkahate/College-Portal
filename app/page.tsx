@@ -46,7 +46,7 @@ export default function Home() {
 
             {/* Hero Section - Clean Blue */}
             <section className="relative overflow-hidden bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-6 py-20 pb-28 grid md:grid-cols-2 gap-12 items-center relative z-10">
+                <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-20 pb-16 md:pb-28 grid md:grid-cols-2 gap-8 md:gap-12 items-center relative z-10">
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -56,7 +56,7 @@ export default function Home() {
                             <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
                             Admissions Open for Batch 2025
                         </div>
-                        <h1 className="text-5xl lg:text-6xl font-extrabold text-slate-900 mb-6 leading-[1.1] tracking-tight">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 mb-6 leading-[1.1] tracking-tight">
                             Shape Your Future with <span className="text-blue-600">Innovation</span>
                         </h1>
                         <p className="text-lg text-slate-600 mb-8 max-w-lg leading-relaxed font-medium">

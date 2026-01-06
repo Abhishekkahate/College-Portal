@@ -8,50 +8,12 @@ import { Card, CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button"; // Import Button
 import { Plus } from "lucide-react"; // Import Plus icon
 import { useEffect } from "react"; // Import useEffect
-import { User } from "@/lib/types"; // Import User type
+import { useAuth } from "@/components/providers/AuthProvider";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, addDoc } from "firebase/firestore";
+import { User, NotificationItem } from "@/lib/types";
 
-const notifications = [
-    {
-        id: 1,
-        title: "End Semester Exam Schedule Released",
-        message: "The final schedule for the End Semester Examinations (Dec 2025) has been released. Please check the Exams section for details.",
-        date: "2 hours ago",
-        type: "urgent",
-        icon: AlertTriangle,
-        color: "text-red-500",
-        bg: "bg-red-500/10"
-    },
-    {
-        id: 2,
-        title: "Holiday Declared on Monday",
-        message: "The college will remain closed on Monday due to local elections. Classes will resume on Tuesday.",
-        date: "1 day ago",
-        type: "info",
-        icon: Info,
-        color: "text-blue-500",
-        bg: "bg-blue-500/10"
-    },
-    {
-        id: 3,
-        title: "BEEE Lab Rescheduled",
-        message: "The BEEE Lab for Section A scheduled for tomorrow has been postponed to Friday, 2:00 PM.",
-        date: "2 days ago",
-        type: "warning",
-        icon: Bell,
-        color: "text-yellow-500",
-        bg: "bg-yellow-500/10"
-    },
-    {
-        id: 4,
-        title: "Notes Uploaded for PPS",
-        message: "New notes for Module 3 (Arrays and Strings) have been uploaded by Prof. Sharma.",
-        date: "3 days ago",
-        type: "success",
-        icon: CheckCircle,
-        color: "text-green-500",
-        bg: "bg-green-500/10"
-    }
-];
+// Hardcoded notifications removed.
 
 export default function NotificationsPage() {
     return (
@@ -61,13 +23,17 @@ export default function NotificationsPage() {
 
 function NotificationList() {
     const [filter, setFilter] = useState("all");
-    const [user, setUser] = useState<User | null>(null);
+    const { user, role } = useAuth();
+    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
+        const unsubscribe = onSnapshot(collection(db, "notifications"), (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as NotificationItem));
+            setNotifications(data);
+            setLoading(false);
+        });
+        return () => unsubscribe();
     }, []);
 
     const filteredNotifications = notifications.filter(n => {
@@ -85,9 +51,28 @@ function NotificationList() {
                     <h1 className="text-3xl font-black mb-2 gradient-text">Notifications</h1>
                     <p className="text-gray-600 dark:text-gray-400">Stay updated with the latest announcements.</p>
 
-                    {user?.role === "CR" && (
+                    {(role === "CR" || role === "Teacher") && (
                         <div className="mt-4">
-                            <Button variant="primary" icon={<Plus className="w-4 h-4" />}>Add Notification</Button>
+                            <Button variant="primary" icon={<Plus className="w-4 h-4" />} onClick={() => {
+                                // TODO: Open Modal to add notification
+                                // For now, we can use a prompt for simplicity or better yet, create a component
+                                const title = prompt("Enter Notification Title:");
+                                if (title) {
+                                    const message = prompt("Enter Notification Message:");
+                                    // Add to Firestore
+                                    if (message) {
+                                        addDoc(collection(db, "notifications"), {
+                                            title,
+                                            message,
+                                            date: new Date().toLocaleDateString(),
+                                            type: "info", // Default
+                                            icon: "Info",
+                                            color: "text-blue-500",
+                                            bg: "bg-blue-500/10"
+                                        });
+                                    }
+                                }
+                            }}>Add Notification</Button>
                         </div>
                     )}
                 </motion.div>
@@ -110,7 +95,8 @@ function NotificationList() {
 
             <div className="space-y-4 max-w-4xl">
                 {filteredNotifications.map((notif, index) => {
-                    const Icon = notif.icon;
+                    // Map icon string to component if needed, or simple icon map
+                    const Icon = Info; // Default fallback
                     return (
                         <motion.div
                             key={notif.id}

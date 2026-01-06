@@ -19,58 +19,79 @@ const navItems = [
     { name: "Practical", href: "/practical", icon: FileText },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
 
     return (
-        <aside className="fixed left-4 top-4 bottom-4 w-64 bg-white rounded-2xl flex flex-col z-50 overflow-hidden border border-gray-200 shadow-xl">
-            {/* Logo */}
-            <div className="p-8">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
-                        <Sparkles className="w-6 h-6 text-white" />
+        <>
+            {/* Mobile Backdrop */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+                    onClick={onClose}
+                />
+            )}
+
+            {/* Sidebar Container */}
+            <aside
+                className={cn(
+                    "fixed top-0 bottom-0 left-0 w-64 bg-white z-50 overflow-hidden border-r border-gray-200 shadow-xl transition-transform duration-300 md:translate-x-0 md:top-4 md:bottom-4 md:left-4 md:rounded-2xl md:border",
+                    isOpen ? "translate-x-0" : "-translate-x-full"
+                )}
+            >
+                {/* Logo */}
+                <div className="p-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
+                            <Sparkles className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-2xl font-bold text-slate-900 tracking-tight">NotesHub</span>
                     </div>
-                    <span className="text-2xl font-bold text-slate-900 tracking-tight">NotesHub</span>
                 </div>
-            </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-                {navItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href;
+                {/* Navigation */}
+                <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+                    {navItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = pathname === item.href;
 
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                "relative flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 group overflow-hidden",
-                                isActive
-                                    ? "text-white shadow-md bg-blue-600"
-                                    : "text-gray-600 hover:bg-gray-100 hover:text-blue-600"
-                            )}
-                        >
-                            <Icon className={cn("w-5 h-5 relative z-10", isActive ? "text-white" : "group-hover:scale-110 transition-transform duration-300")} />
-                            <span className="font-medium relative z-10">{item.name}</span>
-                        </Link>
-                    );
-                })}
-            </nav>
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={cn(
+                                    "relative flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 group overflow-hidden",
+                                    isActive
+                                        ? "text-white shadow-md bg-blue-600"
+                                        : "text-gray-600 hover:bg-gray-100 hover:text-blue-600"
+                                )}
+                            >
+                                <Icon className={cn("w-5 h-5 relative z-10", isActive ? "text-white" : "group-hover:scale-110 transition-transform duration-300")} />
+                                <span className="font-medium relative z-10">{item.name}</span>
+                            </Link>
+                        );
+                    })}
+                </nav>
 
-            {/* Bottom Actions */}
-            <div className="p-4 mt-auto space-y-2">
-                <button
-                    onClick={() => {
-                        localStorage.removeItem("user");
-                        window.location.href = "/login";
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-red-600 transition-all duration-300 group"
-                >
-                    <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                    <span className="font-medium">Logout</span>
-                </button>
-            </div>
-        </aside>
+                {/* Bottom Actions */}
+                <div className="p-4 mt-auto space-y-2">
+                    <button
+                        onClick={() => {
+                            localStorage.removeItem("user");
+                            window.location.href = "/login";
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-red-600 transition-all duration-300 group"
+                    >
+                        <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                        <span className="font-medium">Logout</span>
+                    </button>
+                </div>
+            </aside>
+        </>
     );
 }

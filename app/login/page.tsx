@@ -7,6 +7,9 @@ import { motion } from "framer-motion";
 import { User, Lock, GraduationCap, ArrowLeft, ArrowRight } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { toast } from "react-hot-toast";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -20,20 +23,56 @@ export default function LoginPage() {
         e.preventDefault();
         setLoading(true);
 
-        // Simulate login
-        setTimeout(() => {
-            localStorage.setItem("user", JSON.stringify({
-                id: "1",
-                name: "Student Name",
-                rollNumber: formData.rollNumber,
-                role: "student",
-                branch: "CSE",
-                section: "A",
-                year: "2nd",
-                avatar: "",
-            }));
-            router.push("/dashboard");
-        }, 1000);
+        try {
+            const email = `${formData.rollNumber}@student.studypce.com`;
+            const userCredential = await signInWithEmailAndPassword(auth, email, formData.password);
+
+            // Fetch User Data from Firestore
+            const { getDoc, doc, getFirestore } = await import("firebase/firestore");
+            const db = getFirestore();
+
+            let userData = null;
+            try {
+                const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+                if (userDoc.exists()) {
+                    userData = userDoc.data();
+                }
+            } catch (err) {
+                console.error("Firestore fetch failed, using fallback:", err);
+            }
+
+            // Fallback for Demo User if Firestore fails
+            if (!userData && email === "2023CS101@student.studypce.com") {
+                userData = {
+                    name: "Demo Student",
+                    rollNumber: "2023CS101",
+                    email: email,
+                    branch: "CSE",
+                    section: "A",
+                    year: "2nd Year",
+                    role: "student"
+                };
+                toast.error("Network issue. Loaded Demo Profile.");
+            }
+
+            if (userData) {
+                localStorage.setItem("user", JSON.stringify(userData));
+                toast.success("Login successful!");
+                router.push("/dashboard");
+            } else {
+                toast.error("User profile not found.");
+                console.error("No user profile found in Firestore and no fallback available");
+            }
+        } catch (error: any) {
+            console.error("Login Error:", error);
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                toast.error("Invalid Roll Number or Password");
+            } else {
+                toast.error("Failed to login. Please try again.");
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

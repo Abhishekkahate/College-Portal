@@ -6,18 +6,14 @@ import { CalendarCheck, CheckCircle2, ChevronLeft, ChevronRight, UserX, UserChec
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { User, AttendanceRecord } from "@/lib/types";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, doc, setDoc } from "firebase/firestore";
 import { toast } from "sonner";
 
 export default function AttendancePage() {
-    const [user, setUser] = useState<User | null>(null);
+    const { user, role } = useAuth();
     const [selectedDate, setSelectedDate] = useState(new Date());
-
-    useEffect(() => {
-        const userStr = localStorage.getItem("user");
-        if (userStr) {
-            setUser(JSON.parse(userStr));
-        }
-    }, []);
 
     if (!user) return null;
 
@@ -30,7 +26,7 @@ export default function AttendancePage() {
                         Attendance
                     </h1>
                     <p className="text-muted-foreground">
-                        {user.role === "teacher"
+                        {role === "Teacher"
                             ? "Manage and mark student attendance"
                             : "View your attendance record"
                         }
@@ -58,20 +54,27 @@ export default function AttendancePage() {
                 </div>
             </div>
 
-            {user.role === "teacher" ? <TeacherView date={selectedDate} /> : <StudentView date={selectedDate} />}
+            {role === "Teacher" ? <TeacherView date={selectedDate} /> : <StudentView date={selectedDate} />}
         </div>
     );
 }
 
 function TeacherView({ date }: { date: Date }) {
-    // Mock students
-    const [students, setStudents] = useState([
-        { id: "1", name: "Alice Smith", roll: "21CSE001", status: "present" },
-        { id: "2", name: "Bob Johnson", roll: "21CSE002", status: "absent" },
-        { id: "3", name: "Charlie Brown", roll: "21CSE003", status: "present" },
-        { id: "4", name: "Diana Prince", roll: "21CSE004", status: "present" },
-        { id: "5", name: "Ethan Hunt", roll: "21CSE005", status: "medical" },
-    ]);
+    // Mock students - In real app, fetch from Firestore 'users' where role is 'student'
+    const [students, setStudents] = useState<any[]>([]);
+
+    useEffect(() => {
+        // Fetch students list (simplified for now as we don't have full user list in state)
+        // Ideally: const unsubscribe = onSnapshot(collection(db, "students"), ...);
+        // For demonstration, we keep the mock state init but wrapped.
+        setStudents([
+            { id: "1", name: "Alice Smith", roll: "21CSE001", status: "present" },
+            { id: "2", name: "Bob Johnson", roll: "21CSE002", status: "absent" },
+            { id: "3", name: "Charlie Brown", roll: "21CSE003", status: "present" },
+            { id: "4", name: "Diana Prince", roll: "21CSE004", status: "present" },
+            { id: "5", name: "Ethan Hunt", roll: "21CSE005", status: "medical" },
+        ]);
+    }, []);
 
     const handleMark = (id: string, status: string) => {
         setStudents(prev => prev.map(s => s.id === id ? { ...s, status } : s));
@@ -93,7 +96,7 @@ function TeacherView({ date }: { date: Date }) {
             </CardHeader>
             <CardContent>
                 <div className="space-y-2">
-                    {students.map((student) => (
+                    {students.map((student: any) => (
                         <motion.div
                             key={student.id}
                             initial={{ opacity: 0, x: -10 }}

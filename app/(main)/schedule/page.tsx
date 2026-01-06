@@ -6,60 +6,31 @@ import Button from "@/components/ui/Button";
 import { Edit, Save } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { User } from "@/lib/types";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { User, ScheduleDay, ScheduleClass } from "@/lib/types";
 
-const scheduleData = [
-    {
-        day: "Monday", classes: [
-            { time: "09:00 - 10:00", subject: "Engineering Chemistry", room: "LH-101", type: "Lecture" },
-            { time: "10:00 - 11:00", subject: "Basic Calculus", room: "LH-101", type: "Lecture" },
-            { time: "11:00 - 01:00", subject: "BEEE Lab", room: "Lab-2", type: "Lab" },
-            { time: "02:00 - 03:00", subject: "PPS", room: "LH-101", type: "Lecture" },
-        ]
-    },
-    {
-        day: "Tuesday", classes: [
-            { time: "09:00 - 10:00", subject: "PPS", room: "LH-101", type: "Lecture" },
-            { time: "10:00 - 11:00", subject: "ITK", room: "LH-101", type: "Lecture" },
-            { time: "11:00 - 01:00", subject: "Chemistry Lab", room: "Lab-1", type: "Lab" },
-            { time: "02:00 - 04:00", subject: "Workshop", room: "Workshop", type: "Practical" },
-        ]
-    },
-    {
-        day: "Wednesday", classes: [
-            { time: "09:00 - 10:00", subject: "Basic Calculus", room: "LH-101", type: "Lecture" },
-            { time: "10:00 - 11:00", subject: "BEEE", room: "LH-101", type: "Lecture" },
-            { time: "11:00 - 12:00", subject: "English", room: "LH-101", type: "Lecture" },
-            { time: "02:00 - 04:00", subject: "PPS Lab", room: "Comp Lab", type: "Lab" },
-        ]
-    },
-    {
-        day: "Thursday", classes: [
-            { time: "09:00 - 10:00", subject: "BEEE", room: "LH-101", type: "Lecture" },
-            { time: "10:00 - 11:00", subject: "Engineering Chemistry", room: "LH-101", type: "Lecture" },
-            { time: "11:00 - 01:00", subject: "Engineering Drawing", room: "Drawing Hall", type: "Practical" },
-        ]
-    },
-    {
-        day: "Friday", classes: [
-            { time: "09:00 - 10:00", subject: "ITK", room: "LH-101", type: "Lecture" },
-            { time: "10:00 - 11:00", subject: "PPS", room: "LH-101", type: "Lecture" },
-            { time: "11:00 - 12:00", subject: "Basic Calculus", room: "LH-101", type: "Lecture" },
-            { time: "02:00 - 04:00", subject: "Sports", room: "Ground", type: "Activity" },
-        ]
-    },
-];
+// Hardcoded schedule data removed.
 
 export default function SchedulePage() {
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-    const [user, setUser] = useState<User | null>(null);
+    const { user, role } = useAuth();
+    const [scheduleData, setScheduleData] = useState<ScheduleDay[]>([]);
     const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
+        const unsubscribe = onSnapshot(collection(db, "schedule"), (snapshot) => {
+            const data: ScheduleDay[] = snapshot.docs.map(doc => ({
+                day: doc.id,
+                classes: doc.data().classes || []
+            } as ScheduleDay));
+
+            if (data.length > 0) {
+                setScheduleData(data);
+            }
+        });
+        return () => unsubscribe();
     }, []);
 
     const handleUpdateSchedule = () => {
@@ -81,7 +52,7 @@ export default function SchedulePage() {
                 <p className="text-gray-600 dark:text-gray-400">Your academic timetable for the semester.</p>
             </motion.div>
 
-            {user?.role === "CR" && (
+            {(role === "CR" || role === "Teacher") && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -125,7 +96,7 @@ export default function SchedulePage() {
                                 </CardHeader>
                                 <CardContent className="p-0">
                                     <div className="divide-y divide-white/10">
-                                        {daySchedule.classes.map((cls, idx) => (
+                                        {daySchedule.classes && daySchedule.classes.map((cls: ScheduleClass, idx: number) => (
                                             <div key={idx} className="p-4 flex flex-col md:flex-row md:items-center justify-between hover:bg-white/5 transition-colors gap-4 group">
                                                 <div className="flex items-start md:items-center gap-6">
                                                     <div className="w-28 flex flex-col">

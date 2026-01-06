@@ -6,48 +6,23 @@ import { Card, CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { useState, useEffect } from "react";
 import { User } from "@/lib/types";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot } from "firebase/firestore";
+import { LostFoundItem } from "@/lib/types";
 
-const items = [
-    {
-        id: 1,
-        type: "Lost",
-        item: "Blue Water Bottle",
-        location: "Library, 2nd Floor",
-        date: "Today, 10:30 AM",
-        contact: "Ravi (CSE-A)",
-        description: "Milton brand, 1 liter capacity. Has a sticker of 'SpaceX' on it.",
-        status: "Open"
-    },
-    {
-        id: 2,
-        type: "Found",
-        item: "Scientific Calculator",
-        location: "Lab-2 (BEEE Lab)",
-        date: "Yesterday, 04:00 PM",
-        contact: "Lab Assistant",
-        description: "Casio fx-991EX Classwiz. Found on desk number 12.",
-        status: "Open"
-    },
-    {
-        id: 3,
-        type: "Lost",
-        item: "ID Card",
-        location: "Canteen Area",
-        date: "2 days ago",
-        contact: "Priya (ECE-B)",
-        description: "Roll No: 210102045. Please return if found.",
-        status: "Resolved"
-    }
-];
+// Hardcoded items removed.
 
 export default function LostFoundPage() {
-    const [user, setUser] = useState<User | null>(null);
+    const { user, role } = useAuth();
+    const [items, setItems] = useState<LostFoundItem[]>([]);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
+        const unsubscribe = onSnapshot(collection(db, "lostFound"), (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LostFoundItem));
+            setItems(data);
+        });
+        return () => unsubscribe();
     }, []);
 
     const handleReport = () => {
@@ -95,7 +70,7 @@ export default function LostFoundPage() {
                                         {item.status}
                                     </span>
                                 </div>
-                                {user?.role === "CR" && (
+                                {(role === "CR" || role === "Teacher") && (
                                     <div className="absolute top-4 right-4 z-20">
                                         <Button variant="ghost" size="sm" icon={<Edit className="w-3 h-3" />}>Edit</Button>
                                     </div>

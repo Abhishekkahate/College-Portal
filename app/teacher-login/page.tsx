@@ -9,6 +9,8 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { toast } from "sonner";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function TeacherLoginPage() {
     const router = useRouter();
@@ -22,25 +24,17 @@ export default function TeacherLoginPage() {
         e.preventDefault();
         setLoading(true);
 
-        // Simulate login
-        setTimeout(() => {
-            // Simplified validation for demo
-            if (formData.email.includes("teacher")) {
-                localStorage.setItem("user", JSON.stringify({
-                    id: "teacher-1",
-                    name: "Prof. Johnson",
-                    email: formData.email,
-                    role: "teacher",
-                    department: "Computer Science",
-                    avatar: "",
-                }));
-                toast.success("Welcome, Professor!");
-                router.push("/dashboard");
-            } else {
-                toast.error("Invalid Teacher credentials");
-                setLoading(false);
-            }
-        }, 1000);
+        try {
+            const email = `${formData.email}@teacher.studypce.com`;
+            await signInWithEmailAndPassword(auth, email, formData.password);
+            toast.success("Welcome, Professor!");
+            router.push("/dashboard");
+        } catch (error: any) {
+            console.error("Login Error:", error);
+            toast.error("Invalid Teacher credentials or connection error");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -67,9 +61,9 @@ export default function TeacherLoginPage() {
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <Input
-                                type="email"
-                                label="Email Address"
-                                placeholder="professor@college.edu"
+                                type="text"
+                                label="User ID"
+                                placeholder="e.g. EMP4002"
                                 icon={<GraduationCap className="w-5 h-5" />}
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}

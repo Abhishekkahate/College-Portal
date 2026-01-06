@@ -7,7 +7,8 @@ import { Book, Code, Zap, Calculator, PenTool, ArrowRight, Upload as UploadIcon 
 import { Card, CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button"; // Import Button
 import { useState, useEffect } from "react"; // Import hooks
-import { User } from "@/lib/types"; // Import User type
+import { useAuth } from "@/components/providers/AuthProvider";
+import { User } from "@/lib/types";
 
 const subjects = [
     {
@@ -64,14 +65,7 @@ const subjects = [
 
 export default function NotesPage() {
     const router = useRouter();
-    const [user, setUser] = useState<User | null>(null);
-
-    useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-    }, []);
+    const { user, role } = useAuth();
 
     return (
         <div className="p-8 space-y-8">
@@ -83,7 +77,7 @@ export default function NotesPage() {
                 <p className="text-gray-600 dark:text-gray-400">Select a subject to view or upload notes.</p>
             </motion.div>
 
-            {user?.role === "CR" && (
+            {(role === "CR" || role === "Teacher") && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

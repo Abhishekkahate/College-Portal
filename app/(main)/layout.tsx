@@ -13,6 +13,7 @@ export default function DashboardLayout({
 }) {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
         // Check if user is logged in
@@ -38,10 +39,10 @@ export default function DashboardLayout({
     return (
         <div className="min-h-screen bg-gray-50 text-slate-900 relative overflow-hidden font-sans">
 
-            <Sidebar />
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-            <div className="pl-72 pr-4 py-4 min-h-screen flex flex-col transition-all duration-300">
-                <Navbar />
+            <div className={`md:pl-72 pr-4 py-4 min-h-screen flex flex-col transition-all duration-300 ${sidebarOpen ? 'pl-0' : 'pl-0'}`}>
+                <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
                 <motion.main
                     initial={{ opacity: 0, y: 20 }}

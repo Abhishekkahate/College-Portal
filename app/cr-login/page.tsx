@@ -9,6 +9,8 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { toast } from "sonner";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function CRLoginPage() {
     const router = useRouter();
@@ -22,27 +24,23 @@ export default function CRLoginPage() {
         e.preventDefault();
         setLoading(true);
 
-        // Simulate login
-        setTimeout(() => {
-            // Simplified validation for demo
-            if (formData.username.toUpperCase().startsWith("CR")) {
-                localStorage.setItem("user", JSON.stringify({
-                    id: "cr-1",
-                    name: "Class Representative",
-                    rollNumber: formData.username,
-                    role: "CR",
-                    branch: "CSE",
-                    section: "A",
-                    year: "2nd",
-                    avatar: "",
-                }));
-                toast.success("Welcome back, CR!");
-                router.push("/dashboard");
-            } else {
-                toast.error("Invalid CR credentials");
-                setLoading(false);
-            }
-        }, 1000);
+        try {
+            const email = `${formData.username}@student.studypce.com`;
+            await signInWithEmailAndPassword(auth, email, formData.password);
+
+            // Note: In a real app, we should check claim or Firestore role here.
+            // For now, we rely on the AuthProvider to fetch the role, 
+            // but we can sanity check the email domain or ID prefix if needed.
+            // Since CR is a role, we'll let the dashboard redirect if not CR.
+
+            toast.success("Welcome back, CR!");
+            router.push("/dashboard");
+        } catch (error: any) {
+            console.error("Login Error:", error);
+            toast.error("Invalid CR credentials or connection error");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

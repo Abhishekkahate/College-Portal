@@ -7,63 +7,23 @@ import Button from "@/components/ui/Button"; // Import Button
 import { Edit } from "lucide-react"; // Import Edit icon
 import { useState, useEffect } from "react"; // Import hooks
 import { User } from "@/lib/types"; // Import User type
+import { useAuth } from "@/components/providers/AuthProvider";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot } from "firebase/firestore";
+import { Exam } from "@/lib/types";
 
-const exams = [
-    {
-        subject: "Engineering Chemistry",
-        code: "CH101",
-        date: "Dec 15, 2025",
-        time: "10:00 AM - 01:00 PM",
-        venue: "Examination Hall A",
-        syllabus: "Module 1, 2, 3 & 4",
-        status: "Upcoming"
-    },
-    {
-        subject: "Basic Calculus",
-        code: "MA101",
-        date: "Dec 17, 2025",
-        time: "10:00 AM - 01:00 PM",
-        venue: "Examination Hall B",
-        syllabus: "Full Syllabus",
-        status: "Upcoming"
-    },
-    {
-        subject: "PPS",
-        code: "CS101",
-        date: "Dec 19, 2025",
-        time: "10:00 AM - 01:00 PM",
-        venue: "Computer Center",
-        syllabus: "Module 1 to 5",
-        status: "Upcoming"
-    },
-    {
-        subject: "BEEE",
-        code: "EE101",
-        date: "Dec 21, 2025",
-        time: "10:00 AM - 01:00 PM",
-        venue: "Examination Hall A",
-        syllabus: "Module 1, 2 & 3",
-        status: "Upcoming"
-    },
-    {
-        subject: "ITK",
-        code: "HS101",
-        date: "Dec 23, 2025",
-        time: "10:00 AM - 12:00 PM",
-        venue: "LH-101",
-        syllabus: "Full Syllabus",
-        status: "Upcoming"
-    }
-];
+// Hardcoded exams removed.
 
 export default function ExamsPage() {
-    const [user, setUser] = useState<User | null>(null);
+    const { user, role } = useAuth();
+    const [exams, setExams] = useState<Exam[]>([]);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
+        const unsubscribe = onSnapshot(collection(db, "exams"), (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Exam));
+            setExams(data);
+        });
+        return () => unsubscribe();
     }, []);
 
     const calculateDaysLeft = (dateStr: string) => {
@@ -85,8 +45,8 @@ export default function ExamsPage() {
                     <h1 className="text-3xl font-black mb-2 gradient-text">Exam Schedule</h1>
                     <p className="text-gray-600 dark:text-gray-400">Upcoming mid-term and end-term examinations.</p>
                 </div>
-                {user?.role === "CR" && (
-                    <Button variant="outline" icon={<Edit className="w-4 h-4" />}>Update Exams</Button>
+                {(role === "CR" || role === "Teacher") && (
+                    <Button variant="outline" icon={<Edit className="w-4 h-4" />} onClick={() => alert("Feature coming soon: Update Exams")}>Update Exams</Button>
                 )}
             </motion.div>
 
