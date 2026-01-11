@@ -59,11 +59,7 @@ export default function AIHelpPage() {
                 const { value, done: doneReading } = await reader.read();
                 done = doneReading;
                 const chunkValue = decoder.decode(value, { stream: true });
-                // Simple accumulation - typical streamText return might be raw text or special format.
-                // gemini streamText via ai sdk returns plain text parts usually in default mode?
-                // Wait, useChat expects weird protocol. failed streamText response might be complex.
-                // Let's assume raw text for now or basic accumulation. 
-                // Actually, result.toTextStreamResponse() implies text stream.
+               
 
                 aiMessage.content += chunkValue;
                 setMessages(prev => prev.map(m => m.id === aiMessage.id ? { ...aiMessage } : m));
